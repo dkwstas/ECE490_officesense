@@ -32,6 +32,7 @@
 - Full BLE Scanner code
 - SQLite schema with Prisma ORM
 - UUID lookup for public API
+- Connected and tested functionality of all equipment
 
 ### In Progress
 - Core script to receive MQTT data, process and store in Redis
