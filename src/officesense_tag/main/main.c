@@ -24,14 +24,14 @@ static void start_adv(void)
 
     fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
 
+    const char *name = "X6TAG";
+    fields.name = (uint8_t *)name;
+    fields.name_len = strlen(name);
+    fields.name_is_complete = 1;
+
     fields.uuids128 = (ble_uuid128_t *)&service_uuid;
     fields.num_uuids128 = 1;
     fields.uuids128_is_complete = 1;
-
-    uint8_t mfg_data[5] = {0x34, 0x34, 0x34, 0x34, 0x34};
-
-    fields.mfg_data = mfg_data;
-    fields.mfg_data_len = sizeof(mfg_data);
 
     int rc = ble_gap_adv_set_fields(&fields);
     if (rc != 0)
@@ -84,7 +84,7 @@ void app_main(void)
     nimble_port_init();
 
     ble_svc_gap_init();
-    ble_svc_gap_device_name_set("XIAO_C6");
+    ble_svc_gap_device_name_set("X6TAG");
 
     ble_hs_cfg.sync_cb = on_sync;
 
