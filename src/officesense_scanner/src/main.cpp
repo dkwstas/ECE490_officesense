@@ -128,7 +128,7 @@ void mqttTask(void *)
   {
     while (!mqtt.connected())
     {
-      Serial.printf("MQTT Disconnected. Connecting to %s:%d\n", config.mqtt.host.c_str(), config.mqtt.port);
+      // Serial.printf("MQTT Disconnected. Connecting to %s:%d\n", config.mqtt.host.c_str(), config.mqtt.port);
       if (mqtt.connect(config.dev_name.c_str(), config.mqtt.username.c_str(), config.mqtt.password.c_str()))
         Serial.println("MQTT connected.");
       vTaskDelay(pdMS_TO_TICKS(1000));
@@ -369,6 +369,14 @@ void handleCommand(String line)
     else if (key == TAG_NAME_CONFIG_KEY)
       Serial.println(config.tag_name);
   }
+  else if (line == "reset")
+  {
+    prefs.begin("config", false);
+    prefs.clear();
+    prefs.end();
+
+    esp_restart();
+  }
   else if (line == "reboot")
   {
     Serial.println("Rebooting...");
@@ -381,6 +389,7 @@ void handleCommand(String line)
     Serial.println("  set <key> <value>   - Set a configuration value");
     Serial.println("  show <key>          - Show a configuration value");
     Serial.println("  save                - Save configuration to non-volatile storage");
+    Serial.println("  reset               - Reset configuration to defaults");
     Serial.println("  reboot              - Reboot the device");
     Serial.println("  help                - Show this help message");
   }
