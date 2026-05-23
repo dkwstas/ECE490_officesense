@@ -45,3 +45,15 @@
 
 ### Next Steps
 - WiFi self-healing and MQTT reconnection & testing
+
+## Week 4
+### Completed
+- Tag & Scanner CLI for configuration & persistent config
+- Core script (MQTT, location estimation, Store in Redis)
+
+### In Progress
+- NGSI-LD data for public API
+- Admin API with CRUD functions
+
+### Next Steps
+- Add verification with camera in core script
