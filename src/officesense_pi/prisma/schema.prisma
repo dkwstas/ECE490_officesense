@@ -20,3 +20,8 @@ model Tag {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 }
+
+model Room {
+  id   String @id @default(uuid())
+  name String
+}
