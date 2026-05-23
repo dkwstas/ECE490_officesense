@@ -139,7 +139,7 @@ void mqttTask(void *)
       char payload[128];
 
       snprintf(payload, sizeof(payload),
-               "{\"uuid\":\"%s\",\"rssi\":%.2f}",
+               "{\"tagID\":\"%s\",\"rssi\":%.2f}",
                ev.uuid,
                ev.ema);
 

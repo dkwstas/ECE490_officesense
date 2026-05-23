@@ -35,7 +35,7 @@
 #define MQTT_TOPIC "scanners/"
 #define WIFI_SSID "COSMOTE-489882"
 #define WIFI_PASS "x32hbh54673ngccdsfa9"
-#define DEV_NAME "Scanner_Room_A"
+#define DEV_NAME "572b29cb-6a93-480e-adf0-c5c44e9a58df"
 
 struct Config
 {
