@@ -13,13 +13,13 @@ function initMqtt(): Promise<MqttClient> {
         );
 
         client.once("connect", () => {
-            console.log("MQTT connected.");
+            console.log("[MQTT] MQTT connected.");
 
             client.subscribe(config.mqtt.topic, (err) => {
                 if (err) {
                     reject(err);
                 } else {
-                    console.log("MQTT subscribed.");
+                    console.log("[MQTT] MQTT subscribed.");
                     resolve(client);
                 }
             });
@@ -43,6 +43,6 @@ export async function start() {
             console.log(err.message);
         })
     } catch (err: any) {
-        console.log("MQTT connection failed:", err.message);
+        console.log("[MQTT] MQTT connection failed:", err.message);
     }
 }
