@@ -72,7 +72,7 @@ export class RoomTransition {
 
         const enoughTime = now - (this.candidate.since ?? now) >= config.core.debounceMS;
         const enoughConfirmations = this.candidate.samples >= config.core.minSamples;
-        
+
         console.log(`[TRANSITION] enoughTime = ${enoughTime}`);
         console.log(`[TRANSITION] enoughConfirmations = ${enoughConfirmations}`);
         console.log(`[TRANSITION] signalLost = ${signalLost}`);
