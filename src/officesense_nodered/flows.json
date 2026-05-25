@@ -1,0 +1,352 @@
+[
+    {
+        "id": "f1398f7c64b1d0ea",
+        "type": "tab",
+        "label": "OfficeSense Flow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "20bb112ec6e856de",
+        "type": "ui-table",
+        "z": "f1398f7c64b1d0ea",
+        "group": "05cf402c93866d4e",
+        "name": "",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 690,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0a5259b54388cdfc",
+        "type": "inject",
+        "z": "f1398f7c64b1d0ea",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 70,
+        "y": 400,
+        "wires": [
+            [
+                "4030b9e7bcab5435",
+                "f37401387ca7a595"
+            ]
+        ]
+    },
+    {
+        "id": "4030b9e7bcab5435",
+        "type": "http request",
+        "z": "f1398f7c64b1d0ea",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.1.2/livedata/entities",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 270,
+        "y": 360,
+        "wires": [
+            [
+                "4aee360198b34403"
+            ]
+        ]
+    },
+    {
+        "id": "f37401387ca7a595",
+        "type": "http request",
+        "z": "f1398f7c64b1d0ea",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.1.2/livedata/entities?type=room",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 270,
+        "y": 440,
+        "wires": [
+            [
+                "448ba65b518d534d"
+            ]
+        ]
+    },
+    {
+        "id": "448ba65b518d534d",
+        "type": "function",
+        "z": "f1398f7c64b1d0ea",
+        "name": "ParseNGSI",
+        "func": "msg.payload = msg.payload.map(r => {\n    return {\n        Room: r.name?.value,\n        Occupancy: r.occupancy?.value\n    };\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 440,
+        "wires": [
+            [
+                "586c57be87bf8bc6",
+                "49042a0c5086d4b8"
+            ]
+        ]
+    },
+    {
+        "id": "586c57be87bf8bc6",
+        "type": "ui-table",
+        "z": "f1398f7c64b1d0ea",
+        "group": "a98ec11a60f808be",
+        "name": "",
+        "label": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "maxrows": 0,
+        "passthru": false,
+        "autocols": true,
+        "showSearch": true,
+        "deselect": true,
+        "selectionType": "none",
+        "columns": [],
+        "mobileBreakpoint": "sm",
+        "mobileBreakpointType": "defaults",
+        "action": "replace",
+        "className": "",
+        "x": 690,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4aee360198b34403",
+        "type": "function",
+        "z": "f1398f7c64b1d0ea",
+        "name": "ParseNGSI",
+        "func": "const entities = msg.payload;\n\nconst users = entities.filter(e => e.type === \"User\");\nconst rooms = entities.filter(e => e.type === \"Room\");\n\nconst roomMap = {};\nfor (const r of rooms) {\n    roomMap[r.id.replace(\"urn:ngsi-ld:Room:\", \"\")] = r;\n}\n\nmsg.payload = users.map(u => {\n\n    const roomId = u.locatedIn?.object;\n    const room = roomMap[roomId];\n\n    return {\n        Name: u.name?.value,\n        Room: room ? room.name?.value : \"Unknown\",\n        RSSI: u.rssi?.value,\n        Auth: u.authenticationStatus?.value,\n        Time: new Date(u.observedAt?.value)\n            .toLocaleString(\"el-GR\", { timeZone: \"Europe/Athens\" })\n    };\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 360,
+        "wires": [
+            [
+                "20bb112ec6e856de"
+            ]
+        ]
+    },
+    {
+        "id": "49042a0c5086d4b8",
+        "type": "ui-chart",
+        "z": "f1398f7c64b1d0ea",
+        "group": "a98ec11a60f808be",
+        "name": "",
+        "label": "Room Occupancy Chart",
+        "order": 2,
+        "chartType": "bar",
+        "category": "",
+        "categoryType": "none",
+        "xAxisLabel": "Room",
+        "xAxisProperty": "Room",
+        "xAxisPropertyType": "property",
+        "xAxisType": "category",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "Occupancy",
+        "yAxisProperty": "Occupancy",
+        "yAxisPropertyType": "property",
+        "ymin": "0",
+        "ymax": "10",
+        "bins": 10,
+        "action": "replace",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 750,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "05cf402c93866d4e",
+        "type": "ui-group",
+        "name": "Users",
+        "page": "fc203945d260d5ec",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "a98ec11a60f808be",
+        "type": "ui-group",
+        "name": "Rooms",
+        "page": "fc203945d260d5ec",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "fc203945d260d5ec",
+        "type": "ui-page",
+        "name": "OfficeSense",
+        "ui": "7d0f4d8165214cca",
+        "path": "/officesense",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "f49a05b173b6cac3",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "7d0f4d8165214cca",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "f49a05b173b6cac3",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "2372b8eb214a55ee",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
