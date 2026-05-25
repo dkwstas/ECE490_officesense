@@ -50,9 +50,10 @@
 ### Completed
 - Tag & Scanner CLI for configuration & persistent config
 - Core script (MQTT, location estimation, Store in Redis)
+- NGSI-LD public api
+- public dashboard (Node-RED)
 
 ### In Progress
-- NGSI-LD data for public API
 - Admin API with CRUD functions
 
 ### Next Steps
