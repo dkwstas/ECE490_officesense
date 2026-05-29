@@ -1,0 +1,8 @@
+# dlib compile cache
+.docker-cache/
+
+# face recognition models
+models/
+
+# executable
+output/
