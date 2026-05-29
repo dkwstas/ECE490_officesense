@@ -16,9 +16,9 @@ import (
 )
 
 type Result struct {
-	Success    bool
-	Descriptor face.Descriptor
-	Error      string
+	Success    bool            `json:"success"`
+	Descriptor face.Descriptor `json:"descriptor"`
+	Error      string          `json:"error"`
 }
 
 var res Result
