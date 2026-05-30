@@ -3,8 +3,7 @@ import { getEntities, getEntitiesOfType, getEntity } from "./livedata.controller
 
 const router = express.Router();
 
-router.get("/entities", getEntities);
-router.get("/entities", getEntitiesOfType);
+router.get("/entities", getEntities, getEntitiesOfType);
 router.get("/entities/:urn", getEntity);
 
 export default router;
