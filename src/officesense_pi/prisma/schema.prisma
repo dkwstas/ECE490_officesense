@@ -1,24 +1,24 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id            String  @id @default(uuid())
   firstName     String
   lastName      String
-  faceEmbedding Bytes?
+  faceEmbedding String?
   tag           Tag?
 }
 
 model Tag {
   id     String @id @default(uuid())
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Room {
