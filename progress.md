@@ -58,3 +58,11 @@
 
 ### Next Steps
 - Add verification with camera in core script
+
+## Week 5
+### Completed
+- camera scripts
+- adminjs configuration
+
+### In Progress
+- connect camera scripts to core script and adminjs
