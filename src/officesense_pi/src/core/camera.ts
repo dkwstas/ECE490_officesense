@@ -1,43 +1,47 @@
-import { fileURLToPath } from 'url'
-import path from 'path'
+import { fileURLToPath } from "url";
+import path from "path";
 import { spawn } from "child_process";
-import { getRedis } from '../redis/redis.js';
-import { prisma } from '../lib/prisma.js';
-import config from '../config/config.js';
+import { getRedis } from "../redis/redis.js";
+import { prisma } from "../lib/prisma.js";
+import config from "../config/config.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const execPath = '../../bin';
-const binaryPath = path.join(__dirname, execPath, 'cameraSession')
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const execPath = "../../bin";
+const binaryPath = path.join(__dirname, execPath, "cameraSession");
 
 type InputPacket = {
-    uuid: string
-    descriptor: number[]
-}
+    uuid: string;
+    descriptor: number[];
+};
 
 type ResultPacket = {
-    uuid: string
-    verified: boolean
-}
+    uuid: string;
+    verified: boolean;
+};
 
 export async function getUnverifiedUserKeys(): Promise<string[]> {
-    const redis = getRedis()
+    const redis = getRedis();
 
-    const keys = await redis.keys('user:*')
+    const keys = await redis.keys("user:*");
 
-    const unverified: string[] = []
+    const unverified: string[] = [];
 
-    await Promise.all(keys.map(async (key) => {
-        const raw = await redis.get(key)
-        if (!raw) return
-        const session = JSON.parse(raw)
-        if (!session.verified) unverified.push(key.replace('user:', ''))
-    }))
+    await Promise.all(
+        keys.map(async (key) => {
+            const raw = await redis.get(key);
+            if (!raw) return;
+            const session = JSON.parse(raw);
+            if (!session.verified) unverified.push(key.replace("user:", ""));
+        })
+    );
 
-    return unverified
+    return unverified;
 }
 
-export async function getUnverifiedUsersWithEmbeddings(): Promise<{ uuid: string, descriptor: number[] }[]> {
-    const userIds = await getUnverifiedUserKeys()
+export async function getUnverifiedUsersWithEmbeddings(): Promise<
+    { uuid: string; descriptor: number[] }[]
+> {
+    const userIds = await getUnverifiedUserKeys();
 
     const users = await prisma.user.findMany({
         where: {
@@ -45,88 +49,90 @@ export async function getUnverifiedUsersWithEmbeddings(): Promise<{ uuid: string
             faceEmbedding: { not: null },
         },
         select: { id: true, faceEmbedding: true },
-    })
+    });
 
     return users.map((user) => ({
         uuid: user.id,
         descriptor: JSON.parse(user.faceEmbedding!),
-    }))
+    }));
 }
 
 async function cameraSession(packets: InputPacket[]): Promise<ResultPacket[] | null> {
     return new Promise((resolve, reject) => {
         const proc = spawn(binaryPath, [], {
-            cwd: path.join(__dirname, execPath)
-        })
-        let stdout = ''
-        let stderr = ''
+            cwd: path.join(__dirname, execPath),
+        });
+        let stdout = "";
+        let stderr = "";
 
-        proc.stdout.on('data', (d) => stdout += d)
-        proc.stderr.on('data', (d) => stderr += d)
-        proc.stdin.on('error', () => { })
+        proc.stdout.on("data", (d) => (stdout += d));
+        proc.stderr.on("data", (d) => (stderr += d));
+        proc.stdin.on("error", () => {});
 
-        proc.on('error', (err) => {
-            reject(new Error(`Failed to start binary: ${err.message}`))
-        })
+        proc.on("error", (err) => {
+            reject(new Error(`Failed to start binary: ${err.message}`));
+        });
 
-        proc.on('close', (code) => {
-            console.log('cameraSession exited with code', code)
-            const trimmed = stdout.trim()
-            if (trimmed === 'no face found.') return resolve(null)
-            if (code !== 0) return reject(new Error(stderr || `exited with code ${code}`))
+        proc.on("close", (code) => {
+            console.log("cameraSession exited with code", code);
+            const trimmed = stdout.trim();
+            if (trimmed === "no face found.") return resolve(null);
+            if (code !== 0) return reject(new Error(stderr || `exited with code ${code}`));
             try {
-                const results: ResultPacket[] = JSON.parse(trimmed)
-                resolve(results)
+                const results: ResultPacket[] = JSON.parse(trimmed);
+                resolve(results);
             } catch (e) {
-                reject(new Error(`Failed to parse output: ${trimmed}`))
+                reject(new Error(`Failed to parse output: ${trimmed}`));
             }
-        })
+        });
 
         for (const packet of packets) {
-            proc.stdin.write(JSON.stringify(packet) + '\n')
+            proc.stdin.write(JSON.stringify(packet) + "\n");
         }
-        proc.stdin.end()
-    })
+        proc.stdin.end();
+    });
 }
 
 const setUnverified = async (uuid: string) => {
-    const redis = getRedis()
-    const key = `user:${uuid}`
-    const raw = await redis.get(key)
-    if (!raw) return
-    const session = JSON.parse(raw)
-    session.verified = false
-    await redis.set(key, JSON.stringify(session))
-    console.log(`[Camera] Unverified user ${uuid} due to timeout`)
-}
+    const redis = getRedis();
+    const key = `user:${uuid}`;
+    const raw = await redis.get(key);
+    if (!raw) return;
+    const session = JSON.parse(raw);
+    session.verified = false;
+    await redis.set(key, JSON.stringify(session));
+    console.log(`[Camera] Unverified user ${uuid} due to timeout`);
+};
 
 const run = async () => {
     const redis = getRedis();
 
     try {
-        const packets = await getUnverifiedUsersWithEmbeddings()
+        const packets = await getUnverifiedUsersWithEmbeddings();
         if (packets.length > 0) {
-            const results = await cameraSession(packets)
+            const results = await cameraSession(packets);
             if (results) {
-                await Promise.all(results.map(async (r) => {
-                    if (!r.verified) return
-                    const key = `user:${r.uuid}`
-                    const raw = await redis.get(key)
-                    if (!raw) return
-                    const session = JSON.parse(raw)
-                    session.verified = true
-                    await redis.set(key, JSON.stringify(session))
+                await Promise.all(
+                    results.map(async (r) => {
+                        if (!r.verified) return;
+                        const key = `user:${r.uuid}`;
+                        const raw = await redis.get(key);
+                        if (!raw) return;
+                        const session = JSON.parse(raw);
+                        session.verified = true;
+                        await redis.set(key, JSON.stringify(session));
 
-                    setTimeout(() => setUnverified(r.uuid), config.core.verifyTimeout)
+                        setTimeout(() => setUnverified(r.uuid), config.core.verifyTimeout);
 
-                    console.log(`[Camera] Verified user ${r.uuid}`)
-                }))
+                        console.log(`[Camera] Verified user ${r.uuid}`);
+                    })
+                );
             }
         }
     } catch (e) {
-        console.error('camera run error:', e)
+        console.error("camera run error:", e);
     }
-    setTimeout(run, 1000)
-}
+    setTimeout(run, 1000);
+};
 
 export { run as initCamera };

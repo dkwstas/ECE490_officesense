@@ -1,5 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
-import { getActiveUserData, getRedisRoomData, type RedisRoomData, type RedisUserData } from "./livedata.repository.js";
+import {
+    getActiveUserData,
+    getRedisRoomData,
+    type RedisRoomData,
+    type RedisUserData,
+} from "./livedata.repository.js";
 import { prisma } from "../../lib/prisma.js";
 
 interface Params {
@@ -44,11 +49,11 @@ function convertToNGSIUser(user: RedisUserData): User {
         type: "User",
         name: {
             type: "Property",
-            value: user.name
+            value: user.name,
         },
         locatedIn: {
             type: "Relationship",
-            object: user.room
+            object: user.room,
         },
         rssi: {
             type: "Property",
@@ -56,20 +61,20 @@ function convertToNGSIUser(user: RedisUserData): User {
         },
         authenticationStatus: {
             type: "Property",
-            value: user.verified ? "verified" : "unverified"
+            value: user.verified ? "verified" : "unverified",
         },
         observedAt: {
             type: "Property",
-            value: (new Date(user.timestamp)).toISOString()
-        }
-    }
+            value: new Date(user.timestamp).toISOString(),
+        },
+    };
 }
 
 async function convertToNGSIRoom(room: RedisRoomData): Promise<Room | null> {
     const roomName = await prisma.room.findUnique({
         where: { id: room.roomID },
-        select: { name: true }
-    })
+        select: { name: true },
+    });
 
     if (!roomName?.name) return null;
 
@@ -78,13 +83,13 @@ async function convertToNGSIRoom(room: RedisRoomData): Promise<Room | null> {
         type: "Room",
         name: {
             type: "Property",
-            value: roomName.name
+            value: roomName.name,
         },
         occupancy: {
             type: "Property",
-            value: room.occupancy
-        }
-    }
+            value: room.occupancy,
+        },
+    };
 }
 
 async function getNGSIUsers(): Promise<User[]> {
@@ -121,8 +126,8 @@ export async function getEntities(req: Request, res: Response, next: NextFunctio
 
     let entities: Entity[] = [];
 
-    entities.push(...await getNGSIUsers());
-    entities.push(...await getNGSIRooms());
+    entities.push(...(await getNGSIUsers()));
+    entities.push(...(await getNGSIRooms()));
 
     return res.status(200).send(entities);
 }
@@ -131,8 +136,10 @@ export async function getEntitiesOfType(req: Request, res: Response) {
     const { type } = req.query;
 
     switch (type) {
-        case "user": return res.status(200).send(await getNGSIUsers());
-        case "room": return res.status(200).send(await getNGSIRooms());
+        case "user":
+            return res.status(200).send(await getNGSIUsers());
+        case "room":
+            return res.status(200).send(await getNGSIRooms());
         default:
             return res.sendStatus(400);
     }
@@ -167,6 +174,5 @@ export async function getEntity(req: Request<Params>, res: Response) {
         if (!data.length) return res.sendStatus(404);
 
         return res.status(200).send(convertToNGSIUser(data[0]!));
-    } else
-        return res.sendStatus(400);
+    } else return res.sendStatus(400);
 }

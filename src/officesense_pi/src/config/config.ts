@@ -52,8 +52,8 @@ const config: Config = {
         transitionCleanupInterval: 60 * 1000,
         lossThreshold: 5000,
         userTTL: 3 * 60 * 1000,
-        verifyTimeout: 30 * 1000
+        verifyTimeout: 30 * 1000,
     },
-}
+};
 
 export default config;

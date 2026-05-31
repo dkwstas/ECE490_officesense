@@ -7,7 +7,7 @@ let subRedisClient: RedisClientType;
 
 export async function initSubRedis(): Promise<void> {
     subRedisClient = createClient({
-        url: `redis://${config.redis.host}:${config.redis.port}`
+        url: `redis://${config.redis.host}:${config.redis.port}`,
     });
 
     subRedisClient.on("error", (err) => {
@@ -25,7 +25,7 @@ export async function initSubRedis(): Promise<void> {
 
 export async function initRedis(): Promise<RedisClientType> {
     redisClient = createClient({
-        url: `redis://${config.redis.host}:${config.redis.port}`
+        url: `redis://${config.redis.host}:${config.redis.port}`,
     });
 
     redisClient.on("error", (err) => {
