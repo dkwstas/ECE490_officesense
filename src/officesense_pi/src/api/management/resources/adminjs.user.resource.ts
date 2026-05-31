@@ -10,8 +10,6 @@ const execPath = '../../../../bin';
 const binaryPath = path.join(__dirname, execPath, 'extractEmbeddings')
 
 async function extractEmbedding(base64: string): Promise<string> {
-    console.log(base64);
-
     return new Promise((resolve, reject) => {
         const proc = spawn(binaryPath, [], {
             cwd: path.join(__dirname, execPath)
@@ -22,9 +20,7 @@ async function extractEmbedding(base64: string): Promise<string> {
         proc.stdout.on('data', (d) => stdout += d)
         proc.stderr.on('data', (d) => stderr += d)
 
-        proc.stdin.on('error', (err) => {
-            // ignore EPIPE here, we'll catch it in close handler
-        })
+        proc.stdin.on('error', (err) => { });
 
         proc.on('error', (err) => {
             reject(new Error(`Failed to start binary: ${err.message}`))

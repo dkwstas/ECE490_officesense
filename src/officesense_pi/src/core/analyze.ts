@@ -38,7 +38,7 @@ export async function updateRoomOccupancyListener(message: string, channel: stri
     const redis = getRedis();
 
     if (!lastRoomID) {
-        console.log("[!] Key not found in local mapι")
+        console.log("[!] Key not found in local map")
     } else {
         await redis.decr(`room:${lastRoomID}`);
     }
@@ -103,8 +103,6 @@ export async function analyzeData(roomID: string, metrics: {
             const user = newUser();
             console.log(`[Redis] Created USER: ${user.psuedoName} USER_ID: ${user.pseudoID}`);
 
-            // trigger camera
-
             await redis.set(`user:${userID}`, JSON.stringify({
                 userID: user.pseudoID,
                 name: user.psuedoName,
@@ -141,8 +139,6 @@ export async function analyzeData(roomID: string, metrics: {
 
         let transition = transitions.get(userID);
 
-        // update room occupancy
-
         if (!transition) {
             console.log("[!] Starting new transition");
             transition = new RoomTransition();
@@ -150,8 +146,6 @@ export async function analyzeData(roomID: string, metrics: {
         }
 
         if (transition.shouldTransitionTo(roomID, metrics.rssi, resObj["rssi"], resObj["timestamp"])) {
-            // trigger camera
-
             console.log(`[!] Transition done ${resObj["room"]} -> ${roomID}`);
 
             await redis.decr(`room:${resObj["room"]}`);
@@ -162,7 +156,7 @@ export async function analyzeData(roomID: string, metrics: {
             resObj["rssi"] = metrics.rssi;
             resObj["room"] = roomID;
             resObj["timestamp"] = Date.now()
-
+            resObj["verified"] = false;
 
             await redis.set(`user:${userID}`, JSON.stringify(resObj), { PX: config.core.userTTL });
         } else
