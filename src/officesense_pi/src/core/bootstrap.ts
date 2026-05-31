@@ -1,5 +1,6 @@
 import { getRoomIDs } from "../api/livedata/livedata.repository.js";
 import { initRedis, initSubRedis } from "../redis/redis.js";
+import { initCamera } from "./camera.js";
 import * as mqtt from "./mqtt.js";
 import { cleanupWorker } from "./transition.js";
 
@@ -18,6 +19,8 @@ export async function bootstrap() {
         await mqtt.start();
 
         cleanupWorker();
+
+        await initCamera();
 
         console.log("[!] Core started.");
     } catch (err: any) {
