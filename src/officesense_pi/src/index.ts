@@ -1,8 +1,8 @@
 import express from "express";
 import lookupRouter from "./api/lookup/lookup.routes.js";
-import livedataRouter from "./api/livedata/livadata.routes.js"
-import mapperRouter from "./api/mapper/mapper.routes.js"
-import { createAdmin, sessionMiddleware } from './api/management/adminjs.routes.js'
+import livedataRouter from "./api/livedata/livadata.routes.js";
+import mapperRouter from "./api/mapper/mapper.routes.js";
+import { createAdmin, sessionMiddleware } from "./api/management/adminjs.routes.js";
 import config from "./config/config.js";
 import { bootstrap } from "./core/bootstrap.js";
 
@@ -23,5 +23,4 @@ import { bootstrap } from "./core/bootstrap.js";
     });
 
     bootstrap();
-
-})()
+})();

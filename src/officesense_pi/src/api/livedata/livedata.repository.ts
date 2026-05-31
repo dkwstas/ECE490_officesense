@@ -30,15 +30,9 @@ export async function getActiveUserData(userID?: string): Promise<RedisUserData[
 
             cursor = res.cursor;
 
-            const values = await Promise.all(
-                res.keys.map((key) => redis.get(key))
-            );
+            const values = await Promise.all(res.keys.map((key) => redis.get(key)));
 
-            result.push(...values
-                .filter((v): v is string => v !== null)
-                .map((v) => JSON.parse(v))
-            );
-
+            result.push(...values.filter((v): v is string => v !== null).map((v) => JSON.parse(v)));
         } while (cursor !== "0");
 
         return result;
@@ -79,14 +73,14 @@ export async function getRedisRoomData(roomID?: string): Promise<RedisRoomData[]
                 }))
             );
 
-            result.push(...values
-                .filter((v) => v.occupancy !== null)
-                .map((v) => ({
-                    roomID: v.roomID.slice(5),
-                    occupancy: Number(v.occupancy),
-                }))
+            result.push(
+                ...values
+                    .filter((v) => v.occupancy !== null)
+                    .map((v) => ({
+                        roomID: v.roomID.slice(5),
+                        occupancy: Number(v.occupancy),
+                    }))
             );
-
         } while (cursor !== "0");
 
         return result;
@@ -99,8 +93,8 @@ export async function getRedisRoomData(roomID?: string): Promise<RedisRoomData[]
     return [{ roomID: roomID, occupancy: Number(res) }];
 }
 
-export async function getRoomIDs(): Promise<{ id: string; }[]> {
+export async function getRoomIDs(): Promise<{ id: string }[]> {
     return await prisma.room.findMany({
-        select: { id: true }
+        select: { id: true },
     });
 }

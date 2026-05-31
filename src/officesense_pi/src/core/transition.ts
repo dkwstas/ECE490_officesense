@@ -9,8 +9,7 @@ export function cleanupWorker() {
         for (const [userID, transition] of transitions) {
             const inactiveFor = now - transition.lastSeen;
 
-            if (inactiveFor > 5 * config.core.transitionTTL)
-                transitions.delete(userID);
+            if (inactiveFor > 5 * config.core.transitionTTL) transitions.delete(userID);
         }
     }, config.core.transitionCleanupInterval);
 }
@@ -31,7 +30,12 @@ export class RoomTransition {
         this.candidate = { roomID: null, since: null, samples: 0, rssi: null };
     }
 
-    shouldTransitionTo(roomID: string, candidateRSSI: number, currRSSI: number, lastCurrentSeen: number) {
+    shouldTransitionTo(
+        roomID: string,
+        candidateRSSI: number,
+        currRSSI: number,
+        lastCurrentSeen: number
+    ) {
         const now = Date.now();
         this.lastSeen = now;
 
@@ -48,7 +52,8 @@ export class RoomTransition {
         }
 
         const noCandidate = this.candidate.roomID == null;
-        const betterCandidate = this.candidate.roomID != roomID &&
+        const betterCandidate =
+            this.candidate.roomID != roomID &&
             this.candidate.rssi !== null &&
             candidateRSSI > this.candidate.rssi + config.core.candidateHysteresis;
 

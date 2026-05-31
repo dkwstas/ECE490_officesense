@@ -12,8 +12,7 @@ export async function bootstrap() {
         console.log(`[!] Flushed Redis.`);
 
         const rooms = await getRoomIDs();
-        for (const { id } of rooms)
-            await redis.set(`room:${id}`, 0);
+        for (const { id } of rooms) await redis.set(`room:${id}`, 0);
 
         await initSubRedis();
         await mqtt.start();

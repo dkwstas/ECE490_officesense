@@ -4,13 +4,10 @@ import { analyzeData } from "./analyze.js";
 
 function initMqtt(): Promise<MqttClient> {
     return new Promise((resolve, reject) => {
-        const client = mqtt.connect(
-            `mqtt://${config.mqtt.host}:${config.mqtt.port}`,
-            {
-                username: config.mqtt.username,
-                password: config.mqtt.password
-            }
-        );
+        const client = mqtt.connect(`mqtt://${config.mqtt.host}:${config.mqtt.port}`, {
+            username: config.mqtt.username,
+            password: config.mqtt.password,
+        });
 
         client.once("connect", () => {
             console.log("[MQTT] MQTT connected.");
@@ -41,7 +38,7 @@ export async function start() {
 
         mqttClient.on("error", (err) => {
             console.log(err.message);
-        })
+        });
     } catch (err: any) {
         console.log("[MQTT] MQTT connection failed:", err.message);
     }

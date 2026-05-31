@@ -4,25 +4,9 @@ import { RoomTransition, transitions } from "./transition.js";
 import config from "../config/config.js";
 import { type RedisUserData } from "../api/livedata/livedata.repository.js";
 
-const adjectives = [
-    "Crazy",
-    "Silent",
-    "Dark",
-    "Fast",
-    "Lucky",
-    "Wild",
-    "Epic"
-];
+const adjectives = ["Crazy", "Silent", "Dark", "Fast", "Lucky", "Wild", "Epic"];
 
-const nouns = [
-    "Tiger",
-    "Wolf",
-    "Falcon",
-    "Shadow",
-    "Ninja",
-    "Dragon",
-    "Phoenix"
-];
+const nouns = ["Tiger", "Wolf", "Falcon", "Shadow", "Ninja", "Dragon", "Phoenix"];
 
 const running = new Set<string>();
 const userRooms = new Map<string, string>();
@@ -38,7 +22,7 @@ export async function updateRoomOccupancyListener(message: string, channel: stri
     const redis = getRedis();
 
     if (!lastRoomID) {
-        console.log("[!] Key not found in local map")
+        console.log("[!] Key not found in local map");
     } else {
         await redis.decr(`room:${lastRoomID}`);
     }
@@ -50,28 +34,29 @@ export async function updateRoomOccupancyListener(message: string, channel: stri
 }
 
 function generateNickname() {
-    const adjective =
-        adjectives[Math.floor(Math.random() * adjectives.length)];
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
 
-    const noun =
-        nouns[Math.floor(Math.random() * nouns.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
 
     const number = Math.floor(Math.random() * 1000);
 
     return `${adjective}${noun}${number}`;
 }
 
-function newUser(): { pseudoID: string, psuedoName: string } {
+function newUser(): { pseudoID: string; psuedoName: string } {
     return {
         pseudoID: crypto.randomUUID(),
-        psuedoName: generateNickname()
+        psuedoName: generateNickname(),
     };
 }
 
-export async function analyzeData(roomID: string, metrics: {
-    tagID: string,
-    rssi: number
-}) {
+export async function analyzeData(
+    roomID: string,
+    metrics: {
+        tagID: string;
+        rssi: number;
+    }
+) {
     if (running.has(metrics.tagID)) {
         console.log(`[!] Skipping TAG_ID: ${metrics.tagID} already in process.`);
         return;
@@ -80,9 +65,11 @@ export async function analyzeData(roomID: string, metrics: {
     running.add(metrics.tagID);
 
     try {
-        console.log(`\n=======================================================\n` +
-            `ROOM_ID: ${roomID}\nTAG_ID: ${metrics.tagID}\nRSSI: ${metrics.rssi}\n` +
-            `=======================================================\n`);
+        console.log(
+            `\n=======================================================\n` +
+                `ROOM_ID: ${roomID}\nTAG_ID: ${metrics.tagID}\nRSSI: ${metrics.rssi}\n` +
+                `=======================================================\n`
+        );
 
         const userID = (
             await prisma.tag.findUnique({
@@ -93,8 +80,7 @@ export async function analyzeData(roomID: string, metrics: {
 
         console.log(`[SQLite] Resolved USER_ID: ${userID}`);
 
-        if (!userID)
-            return;
+        if (!userID) return;
 
         const redis = getRedis();
         const res = await redis.get(`user:${userID}`);
@@ -103,14 +89,18 @@ export async function analyzeData(roomID: string, metrics: {
             const user = newUser();
             console.log(`[Redis] Created USER: ${user.psuedoName} USER_ID: ${user.pseudoID}`);
 
-            await redis.set(`user:${userID}`, JSON.stringify({
-                userID: user.pseudoID,
-                name: user.psuedoName,
-                rssi: metrics.rssi,
-                room: roomID,
-                verified: false,
-                timestamp: Date.now()
-            }), { PX: config.core.userTTL });
+            await redis.set(
+                `user:${userID}`,
+                JSON.stringify({
+                    userID: user.pseudoID,
+                    name: user.psuedoName,
+                    rssi: metrics.rssi,
+                    room: roomID,
+                    verified: false,
+                    timestamp: Date.now(),
+                }),
+                { PX: config.core.userTTL }
+            );
 
             await redis.set(`_user:${user.pseudoID}`, userID);
 
@@ -130,7 +120,7 @@ export async function analyzeData(roomID: string, metrics: {
         if (roomID == resObj["room"]) {
             console.log("[Redis] Same room, updating redis...");
             resObj["rssi"] = metrics.rssi;
-            resObj["timestamp"] = Date.now()
+            resObj["timestamp"] = Date.now();
 
             await redis.set(`user:${userID}`, JSON.stringify(resObj), { PX: config.core.userTTL });
 
@@ -145,7 +135,9 @@ export async function analyzeData(roomID: string, metrics: {
             transitions.set(userID, transition);
         }
 
-        if (transition.shouldTransitionTo(roomID, metrics.rssi, resObj["rssi"], resObj["timestamp"])) {
+        if (
+            transition.shouldTransitionTo(roomID, metrics.rssi, resObj["rssi"], resObj["timestamp"])
+        ) {
             console.log(`[!] Transition done ${resObj["room"]} -> ${roomID}`);
 
             await redis.decr(`room:${resObj["room"]}`);
@@ -155,12 +147,11 @@ export async function analyzeData(roomID: string, metrics: {
 
             resObj["rssi"] = metrics.rssi;
             resObj["room"] = roomID;
-            resObj["timestamp"] = Date.now()
+            resObj["timestamp"] = Date.now();
             resObj["verified"] = false;
 
             await redis.set(`user:${userID}`, JSON.stringify(resObj), { PX: config.core.userTTL });
-        } else
-            console.log("[!] Transition declined");
+        } else console.log("[!] Transition declined");
     } finally {
         running.delete(metrics.tagID);
     }
