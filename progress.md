@@ -63,6 +63,10 @@
 ### Completed
 - camera scripts
 - adminjs configuration
+- integrate camera scripts to system
 
 ### In Progress
-- connect camera scripts to core script and adminjs
+- ~connect camera scripts to core script and adminjs~
+
+### Next Steps
+- Debugging and refactor
