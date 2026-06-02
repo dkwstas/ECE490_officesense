@@ -40,11 +40,10 @@ export class RoomTransition {
         this.lastSeen = now;
 
         const stronger = candidateRSSI > currRSSI + config.core.hysteresis;
-
         const signalLost = now - lastCurrentSeen > config.core.lossThreshold;
 
         console.log(`[TRANSITION] stronger = ${stronger}`);
-        console.log(`[TRANSITION] signalLost = ${signalLost}`);
+        console.log(`[TRANSITION] signalLost = ${signalLost} (prev=${lastCurrentSeen} now=${now})`);
 
         if (!stronger && !signalLost) {
             this.reset();
@@ -82,7 +81,11 @@ export class RoomTransition {
         console.log(`[TRANSITION] enoughConfirmations = ${enoughConfirmations}`);
         console.log(`[TRANSITION] signalLost = ${signalLost}`);
 
-        if ((enoughTime && enoughConfirmations) || signalLost) {
+        if (enoughTime && enoughConfirmations) {
+            this.reset();
+            return true;
+        }
+        if (signalLost && this.candidate.roomID !== null && enoughConfirmations) {
             this.reset();
             return true;
         }
