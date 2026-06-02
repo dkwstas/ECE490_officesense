@@ -100,7 +100,7 @@ const setUnverified = async (uuid: string) => {
     if (!raw) return;
     const session = JSON.parse(raw);
     session.verified = false;
-    await redis.set(key, JSON.stringify(session));
+    await redis.set(key, JSON.stringify(session), { KEEPTTL: true, XX: true });
     console.log(`[Camera] Unverified user ${uuid} due to timeout`);
 };
 
@@ -120,7 +120,7 @@ const run = async () => {
                         if (!raw) return;
                         const session = JSON.parse(raw);
                         session.verified = true;
-                        await redis.set(key, JSON.stringify(session));
+                        await redis.set(key, JSON.stringify(session), { KEEPTTL: true, XX: true });
 
                         setTimeout(() => setUnverified(r.uuid), config.core.verifyTimeout);
 
@@ -132,7 +132,7 @@ const run = async () => {
     } catch (e) {
         console.error("camera run error:", e);
     }
-    setTimeout(run, 1000);
+    setTimeout(run, config.core.cameraInterval);
 };
 
 export { run as initCamera };
