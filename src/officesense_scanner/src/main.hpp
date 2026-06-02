@@ -26,7 +26,7 @@
 #define UUID_CACHE_RETRY_TIMEOUT 5 * 60 * 1000  // ms
 #define UUID_CACHE_CLEAN_TIMEOUT 60 * 60 * 1000 // ms
 #define API_URL "http://192.168.1.2"
-#define UUID_CHECK_ENDPOINT "/check"
+#define UUID_CHECK_ENDPOINT "/lookup/check"
 #define TAG_NAME "X6TAG"
 #define MQTT_HOST "192.168.1.2"
 #define MQTT_PORT 1883
