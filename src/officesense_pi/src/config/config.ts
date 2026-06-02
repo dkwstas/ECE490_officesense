@@ -24,6 +24,7 @@ interface Config {
         lossThreshold: number;
         userTTL: number;
         verifyTimeout: number;
+        cameraInterval: number;
     };
 }
 
@@ -44,15 +45,16 @@ const config: Config = {
         port: 6379,
     },
     core: {
-        hysteresis: 6,
-        candidateHysteresis: 3,
-        debounceMS: 3000,
+        hysteresis: 8,
+        candidateHysteresis: 5,
+        debounceMS: 3 * 1000,
         minSamples: 4,
         transitionTTL: 5 * 60 * 1000,
         transitionCleanupInterval: 60 * 1000,
-        lossThreshold: 5000,
+        lossThreshold: 8 * 1000,
         userTTL: 3 * 60 * 1000,
         verifyTimeout: 5 * 60 * 1000,
+        cameraInterval: 5 * 1000,
     },
 };
 
