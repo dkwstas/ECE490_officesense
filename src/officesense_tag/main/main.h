@@ -5,7 +5,7 @@
 
 #define DEFAULT_UUID "12345678-9abc-def0-1234-56789abcdef0"
 #define DEFAULT_NAME "X6TAG"
-#define DEFAULT_ADV_INTERVAL 0x80
+#define DEFAULT_ADV_INTERVAL 800
 
 typedef struct
 {
