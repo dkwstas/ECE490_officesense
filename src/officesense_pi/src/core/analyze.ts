@@ -58,7 +58,7 @@ export async function analyzeData(
     }
 ) {
     if (running.has(metrics.tagID)) {
-        console.log(`[!] Skipping TAG_ID: ${metrics.tagID} already in process.`);
+        console.log(`[!] Skipping TAG_ID: ${metrics.tagID} ROOM_ID: ${roomID} already in process.`);
         return;
     }
 
