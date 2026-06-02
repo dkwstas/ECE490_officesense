@@ -5,6 +5,7 @@
 #include "nimble/nimble_port_freertos.h"
 #include "services/gap/ble_svc_gap.h"
 #include "driver/usb_serial_jtag.h"
+#include "driver/gpio.h"
 #include "main.h"
 
 static config_t config;
@@ -36,8 +37,8 @@ static void start_adv(void)
 
     params.conn_mode = BLE_GAP_CONN_MODE_NON;
     params.disc_mode = BLE_GAP_DISC_MODE_GEN;
-    params.itvl_min = 0x80; // ~100ms
-    params.itvl_max = 0x80;
+    params.itvl_min = config.adv_interval;
+    params.itvl_max = config.adv_interval;
 
     rc = ble_gap_adv_start(
         BLE_ADDR_PUBLIC,
@@ -54,6 +55,7 @@ static void start_adv(void)
     else
     {
         ESP_LOGI(config.name, "advertising started");
+        gpio_set_level(GPIO_NUM_15, 0);
     }
 }
 
@@ -139,7 +141,7 @@ static esp_err_t save_config()
     if (err != ESP_OK)
         goto exit;
 
-    err = nvs_set_u32(nvs, "adv_int", config.adv_interval);
+    err = nvs_set_u16(nvs, "adv_int", config.adv_interval);
 
     if (err != ESP_OK)
         goto exit;
@@ -177,7 +179,7 @@ static esp_err_t load_config()
 
     nvs_get_str(nvs, "name", config.name, &len);
 
-    nvs_get_u32(nvs, "adv_int", &config.adv_interval);
+    nvs_get_u16(nvs, "adv_int", &config.adv_interval);
 
     nvs_close(nvs);
 
@@ -219,9 +221,9 @@ void serial_task(void *arg)
                     }
                     else if (strncmp(line, "set adv_interval ", 17) == 0)
                     {
-                        uint32_t interval = atoi(line + 17);
+                        float interval = atof(line + 17);
                         if (interval > 0)
-                            config.adv_interval = interval;
+                            config.adv_interval = (uint16_t)(interval / 0.625f);
                     }
                     else if (strcmp(line, "show uuid") == 0)
                     {
@@ -235,7 +237,7 @@ void serial_task(void *arg)
                     }
                     else if (strcmp(line, "show adv_interval") == 0)
                     {
-                        int len = snprintf(buf, sizeof(buf), "%lu\n", (unsigned long)config.adv_interval);
+                        int len = snprintf(buf, sizeof(buf), "%.3f\n", config.adv_interval * 0.625f);
                         usb_serial_jtag_write_bytes(buf, len, 20 / portTICK_PERIOD_MS);
                     }
                     else if (strcmp(line, "save") == 0)
@@ -293,6 +295,10 @@ void serial_task(void *arg)
 
 void app_main(void)
 {
+    gpio_reset_pin(GPIO_NUM_15);
+    gpio_set_direction(GPIO_NUM_15, GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_NUM_15, 1);
+
     ESP_ERROR_CHECK(nvs_flash_init());
 
     usb_serial_jtag_driver_config_t cfg = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();

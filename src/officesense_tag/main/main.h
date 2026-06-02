@@ -12,7 +12,7 @@ typedef struct
     ble_uuid128_t uuid;
     char uuid_str[37];
     char name[32];
-    uint32_t adv_interval;
+    uint16_t adv_interval;
 } config_t;
 
 #endif
