@@ -128,6 +128,11 @@ void mqttTask(void *)
   {
     while (!mqtt.connected())
     {
+      if (WiFi.status() != WL_CONNECTED)
+      {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        continue;
+      }
       // Serial.printf("MQTT Disconnected. Connecting to %s:%d\n", config.mqtt.host.c_str(), config.mqtt.port);
       if (mqtt.connect(config.dev_name.c_str(), config.mqtt.username.c_str(), config.mqtt.password.c_str()))
         Serial.println("MQTT connected.");
@@ -253,6 +258,9 @@ void saveConfig()
 
   prefs.putString(WIFI_SSID_CONFIG_KEY, config.wifi.ssid);
   prefs.putString(WIFI_PASS_CONFIG_KEY, config.wifi.password);
+  prefs.putString(WIFI_IP_CONFIG_KEY, config.wifi.ip);
+  prefs.putString(WIFI_GW_CONFIG_KEY, config.wifi.gateway);
+  prefs.putString(WIFI_SUBNET_CONFIG_KEY, config.wifi.subnet);
 
   prefs.putString(DEV_NAME_CONFIG_KEY, config.dev_name);
   prefs.putString(TAG_NAME_CONFIG_KEY, config.tag_name);
@@ -280,6 +288,9 @@ void loadConfig()
 
   config.wifi.ssid = prefs.getString(WIFI_SSID_CONFIG_KEY, WIFI_SSID);
   config.wifi.password = prefs.getString(WIFI_PASS_CONFIG_KEY, WIFI_PASS);
+  config.wifi.ip = prefs.getString(WIFI_IP_CONFIG_KEY, WIFI_IP);
+  config.wifi.gateway = prefs.getString(WIFI_GW_CONFIG_KEY, WIFI_GW);
+  config.wifi.subnet = prefs.getString(WIFI_SUBNET_CONFIG_KEY, WIFI_SUBNET);
 
   config.dev_name = prefs.getString(DEV_NAME_CONFIG_KEY, DEV_NAME);
   config.tag_name = prefs.getString(TAG_NAME_CONFIG_KEY, TAG_NAME);
@@ -324,6 +335,12 @@ void handleCommand(String line)
       config.wifi.ssid = value;
     else if (key == WIFI_PASS_CONFIG_KEY)
       config.wifi.password = value;
+    else if (key == WIFI_IP_CONFIG_KEY)
+      config.wifi.ip = value;
+    else if (key == WIFI_GW_CONFIG_KEY)
+      config.wifi.gateway = value;
+    else if (key == WIFI_SUBNET_CONFIG_KEY)
+      config.wifi.subnet = value;
     else if (key == DEV_NAME_CONFIG_KEY)
       config.dev_name = value;
     else if (key == TAG_NAME_CONFIG_KEY)
@@ -364,6 +381,12 @@ void handleCommand(String line)
       Serial.println(config.wifi.ssid);
     else if (key == WIFI_PASS_CONFIG_KEY)
       Serial.println(config.wifi.password);
+    else if (key == WIFI_IP_CONFIG_KEY)
+      Serial.println(config.wifi.ip);
+    else if (key == WIFI_GW_CONFIG_KEY)
+      Serial.println(config.wifi.gateway);
+    else if (key == WIFI_SUBNET_CONFIG_KEY)
+      Serial.println(config.wifi.subnet);
     else if (key == DEV_NAME_CONFIG_KEY)
       Serial.println(config.dev_name);
     else if (key == TAG_NAME_CONFIG_KEY)
@@ -402,6 +425,9 @@ void handleCommand(String line)
     Serial.println("      mq.topic");
     Serial.println("      wf.ssid");
     Serial.println("      wf.pass");
+    Serial.println("      wf.ip");
+    Serial.println("      wf.gw");
+    Serial.println("      wf.subnet");
     Serial.println("      dev.name");
     Serial.println("      tag.name");
     Serial.println("  save                - Save configuration to non-volatile storage");
@@ -411,13 +437,47 @@ void handleCommand(String line)
   }
 }
 
+void wifiBegin()
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+
+  IPAddress local_ip, gateway, subnet;
+  local_ip.fromString(config.wifi.ip);
+
+  if (local_ip != IPAddress(0, 0, 0, 0))
+  {
+    gateway.fromString(config.wifi.gateway);
+    subnet.fromString(config.wifi.subnet);
+    WiFi.config(local_ip, gateway, subnet);
+  }
+
+  WiFi.begin(config.wifi.ssid.c_str(), config.wifi.password.c_str());
+}
+
 void setup()
 {
   Serial.begin(115200);
 
   loadConfig();
 
-  WiFi.begin(config.wifi.ssid.c_str(), config.wifi.password.c_str());
+  WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info)
+               {
+  switch (event)
+  {
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.println("WiFi connected.");
+      break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.printf("WiFi disconnected, reason: %d\n", info.wifi_sta_disconnected.reason);
+      break;
+  } });
+
+  wifiBegin();
 
   MQTT_PUB_TOPIC = config.mqtt.topic + config.dev_name;
 
@@ -448,6 +508,22 @@ void setup()
 void loop()
 {
   BleEvent ev;
+  static uint32_t last_wifi_check = 0;
+
+  if (millis() - last_wifi_check >= WIFI_TEST_INTERVAL)
+  {
+    last_wifi_check = millis();
+
+    wl_status_t status = WiFi.status();
+
+    if (status == WL_CONNECT_FAILED || status == WL_NO_SSID_AVAIL)
+    {
+      Serial.printf("WiFi failed (status %d), retrying...\n", status);
+      WiFi.disconnect();
+      delay(100);
+      wifiBegin();
+    }
+  }
 
   while (xQueueReceive(ble_queue, &ev, 0))
     processEvent(ev);

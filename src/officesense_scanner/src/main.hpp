@@ -18,6 +18,9 @@
 #define MQTT_TOPIC_CONFIG_KEY "mq.topic"
 #define WIFI_SSID_CONFIG_KEY "wf.ssid"
 #define WIFI_PASS_CONFIG_KEY "wf.pass"
+#define WIFI_IP_CONFIG_KEY "wf.ip"
+#define WIFI_GW_CONFIG_KEY "wf.gw"
+#define WIFI_SUBNET_CONFIG_KEY "wf.subnet"
 #define DEV_NAME_CONFIG_KEY "dev.name"
 #define TAG_NAME_CONFIG_KEY "tag.name"
 
@@ -35,7 +38,11 @@
 #define MQTT_TOPIC "scanners/"
 #define WIFI_SSID "COSMOTE-489882"
 #define WIFI_PASS "x32hbh54673ngccdsfa9"
+#define WIFI_IP "0.0.0.0"
+#define WIFI_GW "0.0.0.0"
+#define WIFI_SUBNET "255.255.255.0"
 #define DEV_NAME "572b29cb-6a93-480e-adf0-c5c44e9a58df"
+#define WIFI_TEST_INTERVAL 5 * 1000 // ms
 
 struct Config
 {
@@ -66,6 +73,9 @@ struct Config
     {
         String ssid;
         String password;
+        String ip;
+        String gateway;
+        String subnet;
     } wifi;
 
     String dev_name;
