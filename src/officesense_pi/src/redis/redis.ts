@@ -5,10 +5,16 @@ import { updateRoomOccupancyListener } from "../core/analyze.js";
 let redisClient: RedisClientType;
 let subRedisClient: RedisClientType;
 
+const redisOptions = {
+    socket: {
+        host: config.redis.host,
+        port: config.redis.port,
+    },
+    password: config.redis.password,
+};
+
 export async function initSubRedis(): Promise<void> {
-    subRedisClient = createClient({
-        url: `redis://${config.redis.host}:${config.redis.port}`,
-    });
+    subRedisClient = createClient(redisOptions);
 
     subRedisClient.on("error", (err) => {
         console.log("[Redis] SubRedis error:", err.message);
@@ -24,9 +30,7 @@ export async function initSubRedis(): Promise<void> {
 }
 
 export async function initRedis(): Promise<RedisClientType> {
-    redisClient = createClient({
-        url: `redis://${config.redis.host}:${config.redis.port}`,
-    });
+    redisClient = createClient(redisOptions);
 
     redisClient.on("error", (err) => {
         console.log("[Redis] Redis error:", err.message);
