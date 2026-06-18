@@ -38,14 +38,14 @@ const config: Config = {
         port: parseInt(process.env.API_PORT ?? "80"),
     },
     mqtt: {
-        host: process.env.MQTT_HOST ?? "192.168.2.3",
+        host: process.env.MQTT_HOST ?? "10.24.4.13",
         port: parseInt(process.env.MQTT_PORT ?? "1883"),
         username: process.env.MQTT_USERNAME ?? "user",
         password: process.env.MQTT_PASSWORD ?? "pass",
         topic: process.env.MQTT_TOPIC ?? "scanners/+",
     },
     redis: {
-        host: process.env.REDIS_HOST ?? "192.168.2.3",
+        host: process.env.REDIS_HOST ?? "10.24.4.13",
         port: parseInt(process.env.REDIS_PORT ?? "6379"),
         password: process.env.REDIS_PASSWORD ?? "redispassword",
     },
