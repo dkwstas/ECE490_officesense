@@ -1,5 +1,5 @@
 import React from "react";
-import { BasePropertyProps } from "adminjs";
+import type { BasePropertyProps } from "adminjs";
 import { Label } from "@adminjs/design-system";
 
 const FaceEmbeddingField: React.FC<BasePropertyProps> = ({ record, property }) => {

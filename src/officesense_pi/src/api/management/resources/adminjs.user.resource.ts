@@ -1,7 +1,7 @@
 import { prisma } from "../../../lib/prisma.js";
 import { getModelByName } from "@adminjs/prisma";
 import { spawn } from "child_process";
-import { Components } from "../components.js";
+import { Components } from "../components.bundler.js";
 import { fileURLToPath } from "url";
 import path from "path";
 

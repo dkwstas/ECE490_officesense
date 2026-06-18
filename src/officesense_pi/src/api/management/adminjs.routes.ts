@@ -2,7 +2,7 @@ import AdminJS from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import * as AdminJSPrisma from "@adminjs/prisma";
 import session from "express-session";
-import { componentLoader, Components } from "./components.js";
+import { componentLoader, Components } from "./components.bundler.js";
 
 import userResource from "./resources/adminjs.user.resource.js";
 import tagResource from "./resources/adminjs.tag.resource.js";
@@ -16,13 +16,16 @@ AdminJS.registerAdapter({
 async function createAdmin() {
     const admin = new AdminJS({
         rootPath: "/admin",
-        resources: [userResource, tagResource, roomResource],
         branding: { companyName: "OfficeSense", logo: false },
-        dashboard: { component: Components.Dashboard },
         componentLoader,
+        resources: [userResource, tagResource, roomResource],
+        dashboard: { component: Components.Dashboard },
     });
 
-    await admin.watch();
+    if (process.env.NODE_ENV === "development")
+        await admin.watch();
+    else
+        await admin.initialize();
 
     const router = AdminJSExpress.buildAuthenticatedRouter(
         admin,

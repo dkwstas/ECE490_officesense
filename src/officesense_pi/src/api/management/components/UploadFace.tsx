@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Box, H3, Text, Button, MessageBox } from "@adminjs/design-system";
-import { ActionProps, useRecord } from "adminjs";
+import type { ActionProps } from "adminjs";
 
 const UploadFace: React.FC<ActionProps> = ({ record, action }) => {
     const [preview, setPreview] = useState<string | null>(null);
@@ -18,7 +18,7 @@ const UploadFace: React.FC<ActionProps> = ({ record, action }) => {
         reader.onload = () => {
             const result = reader.result as string;
             setPreview(result);
-            setBase64(result.split(",")[1]); // strip data:image/jpeg;base64,
+            setBase64(result.split(",")[1] ?? null); // strip data:image/jpeg;base64,
         };
         reader.readAsDataURL(file);
     };
