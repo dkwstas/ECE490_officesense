@@ -16,6 +16,7 @@ import { bootstrap } from "./core/bootstrap.js";
     app.use("/lookup", lookupRouter);
     app.use("/livedata", livedataRouter);
     app.use("/admin", mapperRouter);
+    app.use("/admin/frontend/assets", express.static("/app/.adminjs"));
     app.use("/admin", adminRouter);
 
     app.listen(config.api.port, config.api.address, () => {
