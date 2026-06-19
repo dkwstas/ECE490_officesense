@@ -55,12 +55,15 @@ COPY --from=builder /app/src ./src
 # Copy pre-built AdminJS bundle
 COPY --from=builder /app/.adminjs ./.adminjs
 
+# Copy pre-built Go binaries
+COPY --from=builder /app/bin ./bin
+
 # Copy Prisma schema + generated client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
 # Set permissions for non-root user
-RUN chown -R node:node /app/.adminjs /app/dist /app/src
+RUN chown -R node:node /app/.adminjs /app/dist /app/src /app/bin
 
 EXPOSE 80
 
