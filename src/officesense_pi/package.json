@@ -26,6 +26,7 @@
   "dependencies": {
     "@adminjs/express": "^6.1.1",
     "@adminjs/prisma": "^5.0.4",
+    "@influxdata/influxdb-client": "^1.35.0",
     "@prisma/client": "^6.19.3",
     "adminjs": "^7.8.17",
     "dotenv": "^17.4.2",
