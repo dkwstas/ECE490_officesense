@@ -22,10 +22,8 @@ async function createAdmin() {
         dashboard: { component: Components.Dashboard },
     });
 
-    if (process.env.NODE_ENV === "development")
-        await admin.watch();
-    else
-        await admin.initialize();
+    if (process.env.NODE_ENV === "development") await admin.watch();
+    else await admin.initialize();
 
     const router = AdminJSExpress.buildAuthenticatedRouter(
         admin,
