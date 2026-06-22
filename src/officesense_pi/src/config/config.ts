@@ -73,7 +73,7 @@ const config: Config = {
         lossThreshold: parseInt(process.env.CORE_LOSS_THRESHOLD ?? String(8 * 1000)),
         userTTL: parseInt(process.env.CORE_USER_TTL ?? String(3 * 60 * 1000)),
         verifyTimeout: parseInt(process.env.CORE_VERIFY_TIMEOUT ?? String(5 * 60 * 1000)),
-        cameraInterval: parseInt(process.env.CORE_CAMERA_INTERVAL ?? String(5 * 1000)),
+        cameraInterval: parseInt(process.env.CORE_CAMERA_INTERVAL ?? String(5 * 60 * 1000)),
     },
 };
 
