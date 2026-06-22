@@ -3,6 +3,7 @@ import { initRedis, initSubRedis } from "../redis/redis.js";
 import { initCamera } from "./camera.js";
 import * as mqtt from "./mqtt.js";
 import { cleanupWorker } from "./transition.js";
+import { initInflux } from "../influx/influx.js";
 
 export async function bootstrap() {
     try {
@@ -16,6 +17,8 @@ export async function bootstrap() {
 
         await initSubRedis();
         await mqtt.start();
+
+        initInflux();
 
         cleanupWorker();
 

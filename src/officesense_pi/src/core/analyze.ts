@@ -3,14 +3,44 @@ import { prisma } from "../lib/prisma.js";
 import { RoomTransition, transitions } from "./transition.js";
 import config from "../config/config.js";
 import { type RedisUserData } from "../api/livedata/livedata.repository.js";
+import { getInflux } from "../influx/influx.js";
+import { Point } from "@influxdata/influxdb-client";
 
 const adjectives = ["Crazy", "Silent", "Dark", "Fast", "Lucky", "Wild", "Epic"];
-
 const nouns = ["Tiger", "Wolf", "Falcon", "Shadow", "Ninja", "Dragon", "Phoenix"];
 
 const running = new Set<string>();
 const userRooms = new Map<string, string>();
 const userPseudo = new Map<string, string>();
+
+async function writeRoomEvent(
+    event: "enter" | "leave",
+    pseudoID: string,
+    roomID: string,
+    rssi: number
+) {
+    try {
+        const room = await prisma.room.findUnique({
+            where: { id: roomID },
+            select: { name: true },
+        });
+
+        const roomName = room?.name ?? roomID;
+
+        const point = new Point("room_events")
+            .tag("pseudo_id", pseudoID)
+            .tag("room_id", roomID)
+            .tag("room_name", roomName)
+            .tag("event", event)
+            .floatField("rssi", rssi);
+
+        getInflux().writePoint(point);
+
+        console.log(`[InfluxDB] Wrote '${event}' event for pseudo ${pseudoID} in room ${roomName}`);
+    } catch (err) {
+        console.error("[InfluxDB] Failed to write event:", err);
+    }
+}
 
 export async function updateRoomOccupancyListener(message: string, channel: string) {
     console.log(`[Redis] Key ${message} expired.`);
@@ -21,10 +51,11 @@ export async function updateRoomOccupancyListener(message: string, channel: stri
 
     const redis = getRedis();
 
-    if (!lastRoomID) {
-        console.log("[!] Key not found in local map");
-    } else {
+    if (!lastRoomID) console.log("[!] Key not found in local map");
+    else {
         await redis.decr(`room:${lastRoomID}`);
+
+        if (userPseudoID) await writeRoomEvent("leave", userPseudoID, lastRoomID, 0);
     }
 
     await redis.del(`_user:${userPseudoID}`);
@@ -35,11 +66,8 @@ export async function updateRoomOccupancyListener(message: string, channel: stri
 
 function generateNickname() {
     const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-
     const noun = nouns[Math.floor(Math.random() * nouns.length)];
-
     const number = Math.floor(Math.random() * 1000);
-
     return `${adjective}${noun}${number}`;
 }
 
@@ -103,14 +131,14 @@ export async function analyzeData(
             );
 
             await redis.set(`_user:${user.pseudoID}`, userID);
-
             await redis.incr(`room:${roomID}`);
 
             userRooms.set(userID, roomID);
             userPseudo.set(userID, user.pseudoID);
 
-            console.log("[Redis] Stored new user in redis.");
+            await writeRoomEvent("enter", user.pseudoID, roomID, metrics.rssi);
 
+            console.log("[Redis] Stored new user in redis.");
             return;
         }
 
@@ -123,7 +151,6 @@ export async function analyzeData(
             resObj["timestamp"] = Date.now();
 
             await redis.set(`user:${userID}`, JSON.stringify(resObj), { PX: config.core.userTTL });
-
             return;
         }
 
@@ -140,7 +167,10 @@ export async function analyzeData(
         ) {
             console.log(`[!] Transition done ${resObj["room"]} -> ${roomID}`);
 
-            await redis.decr(`room:${resObj["room"]}`);
+            const previousRoomID = resObj["room"];
+            const pseudoID = resObj["userID"];
+
+            await redis.decr(`room:${previousRoomID}`);
             await redis.incr(`room:${roomID}`);
 
             userRooms.set(userID, roomID);
@@ -151,7 +181,12 @@ export async function analyzeData(
             resObj["verified"] = false;
 
             await redis.set(`user:${userID}`, JSON.stringify(resObj), { PX: config.core.userTTL });
-        } else console.log("[!] Transition declined");
+
+            await writeRoomEvent("leave", pseudoID, previousRoomID, metrics.rssi);
+            await writeRoomEvent("enter", pseudoID, roomID, metrics.rssi);
+        } else {
+            console.log("[!] Transition declined");
+        }
     } finally {
         running.delete(metrics.tagID);
     }
